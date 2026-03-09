@@ -1,0 +1,12 @@
+FROM node:22
+WORKDIR /data
+
+COPY package*.json ./
+COPY tsconfig.json ./
+COPY prisma ./prisma
+
+RUN npm pkg delete scripts.prepare
+RUN npm ci
+RUN npx prisma generate
+
+CMD ["sh", "-c", "npx prisma migrate deploy && npx nodemon --files src/index.ts"]

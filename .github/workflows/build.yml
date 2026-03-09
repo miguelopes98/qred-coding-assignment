@@ -1,0 +1,16 @@
+name: Build
+
+on:
+  push:
+    tags:
+      - '*' # Trigger when a tag is pushed (any tag)
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  call-shared-workflow:
+    uses: Advisa/gha-workflow-templates/.github/workflows/build.yml@main
+    secrets:
+      AWS_ECR_DEPLOYMENT_ROLE: ${{ secrets.AWS_ECR_DEPLOYMENT_ROLE }}

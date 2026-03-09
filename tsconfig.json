@@ -1,0 +1,17 @@
+{
+  "extends": "@tsconfig/node22/tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "build",
+    "baseUrl": "src",
+    "typeRoots": ["typings", "node_modules/@types"],
+    "resolveJsonModule": true
+  },
+  "include": ["src/**/*", "tests/**/*", "typings", "scripts"],
+  "ts-node": {
+    "files": true,
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  }
+}

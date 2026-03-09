@@ -1,0 +1,14 @@
+version: '3.9'
+
+services:
+  db:
+    image: mysql:8
+    restart: always
+    container_name: integration-test-db
+    ports:
+      - '5433:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: integration_test
+      MYSQL_PASSWORD: integration_test
+      MYSQL_DATABASE: integration_test

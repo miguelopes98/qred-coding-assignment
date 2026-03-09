@@ -1,0 +1,115 @@
+{
+  "name": "template-ts-semantic-release",
+  "version": "1.4.0",
+  "description": "A personal TypeScript project template with semantic releases, pre-commit hooks, GitHub Actions CI, Prettier, Docker, linting, unit tests and integration tests.",
+  "main": "build/index.js",
+  "engines": {
+    "node": ">=22",
+    "npm": ">=9"
+  },
+  "type": "commonjs",
+  "scripts": {
+    "start": "docker compose up",
+    "start:build": "docker compose up --build",
+    "start:dev": "dotenv -e .env.development -- nodemon --files src/index.ts",
+    "start:dev:docker": "docker compose -f docker-compose.dev.yml up",
+    "start:dev:docker:build": "docker compose -f docker-compose.dev.yml up --build",
+    "start:prod": "node ./build/src/index.js",
+    "build": "rimraf ./build && tsc  --build --verbose ",
+    "build:check": "tsc --noEmit",
+    "lint": "eslint --ignore-path .gitignore --ext .js,.ts .",
+    "lint:fix": "eslint --fix --ignore-path .gitignore --ext .js,.ts .",
+    "format": "prettier --ignore-path .gitignore --write .",
+    "format:check": "prettier --ignore-path .gitignore --check .",
+    "test": "dotenv -e tests/unit/.env.test -- mocha -r ts-node/register 'tests/unit/**/*.ts'",
+    "test-coverage:lcov": "c8 report --reporter=text-lcov > coverage/lcov.info",
+    "test:integration:ci": "dotenv -e tests/integration/.env.test-ci -- npm run test:integration:run",
+    "test:integration:local": "npm run test:integration:local:up && npm run test:integration:local:wait-for-readiness && npm run test:integration:run:local && npm run test:integration:local:down",
+    "test:integration:run:local": "dotenv -e tests/integration/.env.test-local -- npm run test:integration:run",
+    "test:integration:run": "prisma migrate deploy && c8 --reporter=lcov mocha -r ts-node/register 'tests/integration/**/*.ts'",
+    "test:integration:local:wait-for-readiness": "docker run --rm --net integration_default sumina46/wait-for-it integration-test-db:3306 -t 60",
+    "test:integration:local:up": "docker compose -f tests/integration/docker-compose.yml up --renew-anon-volumes -d",
+    "test:integration:local:down": "docker compose -f tests/integration/docker-compose.yml down --volumes",
+    "coverage": "nyc npm run test",
+    "prepare": "husky"
+  },
+  "keywords": [
+    "template",
+    "semantic-release"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@prisma/client": "^6.0.0",
+    "config": "^3.3.11",
+    "dotenv": "^16.4.1",
+    "express": "^4.18.2",
+    "rimraf": "^5.0.5",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "@semantic-release/git": "^10.0.1",
+    "@tsconfig/node22": "^22.0.5",
+    "@types/chai": "^4.3.11",
+    "@types/config": "^3.3.3",
+    "@types/express": "^4.17.21",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^22.19.15",
+    "@types/supertest": "^6.0.2",
+    "@types/winston": "^2.4.4",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "c8": "^10.0.0",
+    "chai": "^4.3.10",
+    "cz-conventional-changelog": "^3.3.0",
+    "dotenv": "^16.4.1",
+    "dotenv-cli": "^7.3.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-sonarjs": "^0.23.0",
+    "husky": "^9.1.5",
+    "lint-staged": "^15.2.2",
+    "mocha": "^10.2.0",
+    "nock": "^13.5.1",
+    "nodemon": "^3.0.3",
+    "nyc": "^15.1.0",
+    "prettier": "^3.2.5",
+    "prisma": "^6.0.0",
+    "semantic-release": "^23.0.2",
+    "supertest": "^6.3.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "lint-staged": {
+    "*.{js,ts}": "npm run lint",
+    "*.+(js|ts|json|md)": "npm run format:check"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "release": {
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      [
+        "@semantic-release/npm",
+        {
+          "npmPublish": false
+        }
+      ],
+      [
+        "@semantic-release/git",
+        {
+          "assets": [
+            "package.json",
+            "package-lock.json"
+          ],
+          "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+        }
+      ],
+      "@semantic-release/github"
+    ]
+  }
+}

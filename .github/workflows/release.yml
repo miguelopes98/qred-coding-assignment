@@ -1,0 +1,45 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Get branch name
+        run: |
+          echo "Branch: ${{ github.ref_name }}"
+
+      - name: Get last commit author
+        id: lastcommit
+        run: |
+          AUTHOR_NAME=$(git log -1 --pretty=format:'%an')
+          echo "author=$AUTHOR_NAME" >> $GITHUB_OUTPUT
+
+      - name: Skip if semantic-release-bot authored commit
+        if: steps.lastcommit.outputs.author == 'semantic-release-bot'
+        run: |
+          echo "Skipping coz this is a semantic-release commit."
+          exit 0
+
+      - name: Setup Node and install dependencies
+        if: steps.lastcommit.outputs.author != 'semantic-release-bot'
+        uses: ./.github/actions
+        with:
+          npm_token: ${{ secrets.ADVISA_NPM_TOKEN }}
+          node_version: 22.x
+
+      - name: Semantic Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.SGDT_GH_RELEASE_TOKEN }}
+          ADVISA_NPM_TOKEN: ${{ secrets.ADVISA_NPM_TOKEN }}
+          HUSKY: 0
+        if: steps.lastcommit.outputs.author != 'semantic-release-bot'
+        run: npx semantic-release
