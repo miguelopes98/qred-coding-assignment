@@ -149,6 +149,7 @@ By placing market on Card:
 Adding a bypass flag (e.g. `withCache(..., { bypass: true })`) would only make sense if the same function needed to behave differently depending on call site. That's not the case here. The functions are distinct, and the decision is made once at definition time.
 
 **The split:**
+
 - Cached: companies, employees, cards — stable reference data, mutations explicitly invalidate the relevant keys.
 - Not cached: invoices, transactions — billing-critical, must always reflect current DB state.
 
@@ -159,6 +160,7 @@ Adding a bypass flag (e.g. `withCache(..., { bypass: true })`) would only make s
 **Why this matters:** A slow query behind a cache is still a slow query on every cache miss (cold start, TTL expiry, post-invalidation). If the query is the bottleneck, caching only papers over it. When caching is removed or unavailable, the performance cliff reappears.
 
 **What "well-optimised queries" means in practice:**
+
 - Proper indexes on every column used in filters, joins, and ordering
 - Avoiding N+1 — fetch relations in a single query using `include`/`select` rather than per-row round-trips
 - Pagination on anything unbounded — never fetch an entire table into memory
@@ -168,6 +170,7 @@ Adding a bypass flag (e.g. `withCache(..., { bypass: true })`) would only make s
 - Materialized views or pre-computed aggregates — for expensive aggregations that are read frequently, compute once and store, rather than recomputing on every request
 
 **Alternative caching patterns that still apply even when freshness is required:**
+
 - **Request-scoped memoization** — cache a result within a single request lifetime, not across requests. If the same DB call would be made three times during one operation, fetch once and reuse in memory for the duration of that request. Zero staleness risk because nothing persists between requests. This is the DataLoader pattern, widely used in GraphQL servers.
 - **Short-TTL caching (seconds, not minutes)** — for data where a 2–3 second staleness window is tolerable (e.g. rate limiting counters, approximate totals), a very short TTL can absorb traffic spikes without meaningful correctness risk.
 
