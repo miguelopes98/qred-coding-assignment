@@ -5,7 +5,8 @@ import yaml from 'js-yaml';
 import swaggerUi from 'swagger-ui-express';
 import { createLogger } from './utils/logger';
 import { v1Router } from './routes';
-import { timingMiddleware, errorHandler } from './middlewares';
+import { timingMiddleware } from './middlewares/timing_middleware';
+import { errorHandler } from './middlewares/errorHandler';
 
 const logger = createLogger(module);
 
