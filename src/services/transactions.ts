@@ -3,7 +3,7 @@ import {
   countTransactionsByCompany,
   findAllTransactionsByCompany,
 } from '../db/transaction';
-import { TransactionResponse, PaginatedResponse } from '../types/api.types';
+import { TransactionResponse, PaginatedResponse } from '../types/transaction';
 import { getCurrency } from '../utils/market';
 
 export async function getTransactionsByCompany(

@@ -6,7 +6,7 @@ import {
   updateCardStatus,
 } from '../db/card';
 import { NotFoundError, ConflictError } from '../types/errors';
-import { CardResponse } from '../types/api.types';
+import { CardResponse } from '../types/card';
 import { getCurrency } from '../utils/market';
 import { withCache } from '../cache/withCache';
 import { invalidateCardCaches } from '../cache/invalidators';

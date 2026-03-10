@@ -1,6 +1,6 @@
 import { findEmployeesByCompany, findEmployeeById } from '../db/employee';
 import { NotFoundError } from '../types/errors';
-import { EmployeeResponse, EmployeeSummaryResponse } from '../types/api.types';
+import { EmployeeResponse, EmployeeSummaryResponse } from '../types/employee';
 import { withCache } from '../cache/withCache';
 import { employeesByCompanyKey, employeeKey } from '../cache/keys';
 

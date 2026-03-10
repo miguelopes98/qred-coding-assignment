@@ -1,6 +1,6 @@
 import { findAllCompanies, findCompanyById } from '../db/company';
 import { NotFoundError } from '../types/errors';
-import { CompanyResponse } from '../types/api.types';
+import { CompanyResponse } from '../types/company';
 import { withCache } from '../cache/withCache';
 import { companyListKey, companyKey } from '../cache/keys';
 

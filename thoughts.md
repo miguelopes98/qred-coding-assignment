@@ -96,11 +96,23 @@ By placing market on Card:
 
 **What a production API would add:** Full CRUD for cards (create, deactivate, replace), employee management (create, update, offboard), company onboarding endpoints, and admin/ops endpoints for support workflows.
 
+## Type files are split by domain, not grouped by kind
+
+**Decision:** API response types live in one file per domain entity (`company.ts`, `employee.ts`, `card.ts`, `invoice.ts`, `transaction.ts`) rather than a single `api.types.ts`. Error classes stay in `errors.ts`. Config interfaces stay co-located in `setup/config.ts`.
+
+**Reasoning:** A single `api.types.ts` becomes a catch-all as the API grows. Splitting by domain means each file has a clear, bounded scope — you know exactly where to look for a type and exactly what file to touch when a domain changes. Co-locating config interfaces with `setup/config.ts` is intentional: they're only used there, so moving them to `types/` would add an import hop with no benefit.
+
 ## Centralized error handling + typed error classes
 
 **Decision:** All errors flow through a single Express error middleware. Services throw typed error classes (`NotFoundError`, `ConflictError`, `ValidationError`) rather than raw `Error` objects or returning null.
 
 **Reasoning:** Without this, each route handler would need its own try/catch and its own logic for mapping errors to HTTP status codes — duplicated across every endpoint. Centralizing it means: one place to change error response shape, one place to handle Prisma-specific errors (e.g. `P2025` record not found → 404), and no risk of accidentally leaking stack traces to the client in production. Typed error classes make the intent explicit at the throw site and make the handler's mapping logic straightforward.
+
+## Error responses include both error code and HTTP status code
+
+**Decision:** Every error response body includes both a string `code` (e.g. `"CONFLICT"`) and a numeric `statusCode` (e.g. `409`), in addition to the `message`.
+
+**Reasoning:** The HTTP status code is already on the response, but clients often parse the JSON body rather than inspect the status line — especially frontend code and API consumers that map errors to UI states. Including `statusCode` in the body means a client can handle errors from a single parsed object without needing to read both the status line and the body. The string `code` gives a stable, human-readable identifier for the error type that clients can match on without parsing the message.
 
 ## Cache invalidation must cover all affected keys
 

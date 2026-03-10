@@ -107,6 +107,96 @@ npm run test:integration:local
 
 This will spin up the Docker environment, wait for readiness, run the tests, and tear everything down.
 
+## Manual testing with curl
+
+Once the app is running at `http://localhost:8080`, use the following commands to exercise every endpoint. Start with the list endpoint to get real IDs to use in the rest.
+
+### 1. List all companies
+
+```bash
+curl http://localhost:8080/v1/companies
+```
+
+### 2. Get a single company
+
+```bash
+curl http://localhost:8080/v1/companies/<companyId>
+```
+
+### 3. Get employees for a company
+
+```bash
+curl http://localhost:8080/v1/companies/<companyId>/employees
+```
+
+### 4. Get a single employee
+
+```bash
+curl http://localhost:8080/v1/employees/<employeeId>
+```
+
+### 5. Get cards for a company
+
+```bash
+curl http://localhost:8080/v1/companies/<companyId>/cards
+```
+
+### 6. Get cards for an employee
+
+```bash
+curl http://localhost:8080/v1/employees/<employeeId>/cards
+```
+
+### 7. Activate a card
+
+Anna's card is seeded as `INACTIVE` — use its ID from step 5.
+
+```bash
+curl -X POST http://localhost:8080/v1/cards/<cardId>/activate
+```
+
+### 8. Try to activate the same card again — expect 409
+
+```bash
+curl -X POST http://localhost:8080/v1/cards/<cardId>/activate
+```
+
+### 9. Get all invoices for a company
+
+```bash
+curl http://localhost:8080/v1/companies/<companyId>/invoices
+```
+
+### 10. Get invoices filtered by status
+
+```bash
+curl "http://localhost:8080/v1/companies/<companyId>/invoices?status=DUE"
+```
+
+### 11. Get paginated transactions
+
+```bash
+curl "http://localhost:8080/v1/companies/<companyId>/transactions?page=1&pageSize=10"
+```
+
+### 12. Export transactions as CSV
+
+```bash
+curl http://localhost:8080/v1/companies/<companyId>/transactions/export
+```
+
+### 13. Trigger a validation error (invalid UUID)
+
+```bash
+curl http://localhost:8080/v1/companies/not-a-uuid
+```
+
+### 14. Trigger a not found error
+
+```bash
+curl http://localhost:8080/v1/employees/00000000-0000-0000-0000-000000000000
+```
+
 ## GitHub Actions
 
 The CI pipeline runs on every push to `master` and on pull requests. It includes:

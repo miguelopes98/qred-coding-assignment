@@ -1,6 +1,6 @@
 import { InvoiceStatus, Market } from '@prisma/client';
 import { findInvoicesByCompany } from '../db/invoice';
-import { InvoiceResponse } from '../types/api.types';
+import { InvoiceResponse } from '../types/invoice';
 import { getCurrency } from '../utils/market';
 
 export async function getInvoicesByCompany(
