@@ -34,7 +34,7 @@ jobs:
         uses: ./.github/actions
         with:
           npm_token: ${{ secrets.ADVISA_NPM_TOKEN }}
-          node_version: 22.x
+          node_version: 22.17.0
 
       - name: Semantic Release
         env:
