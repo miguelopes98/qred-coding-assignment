@@ -19,8 +19,8 @@ A personal TypeScript project template with the following already set up:
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) >= 22
-- [Docker](https://www.docker.com/) (for running the app and integration tests)
+- [Docker](https://www.docker.com/) — required to run the app and integration tests
+- [Node.js](https://nodejs.org/) >= 22 — only needed if you want to run tooling locally (tests, lint, type-check, Prisma CLI). Not required to run the app itself.
 
 ### Option A: Docker with live reload (recommended for development)
 
@@ -122,6 +122,30 @@ The CI pipeline runs on every push to `master` and on pull requests. It includes
 | Secret             | Purpose                                                |
 | ------------------ | ------------------------------------------------------ |
 | `GH_RELEASE_TOKEN` | GitHub PAT used by semantic-release to create releases |
+
+## AI-assisted development workflow
+
+This project was developed using [Claude Code](https://claude.ai/claude-code) (Anthropic) as an AI pair programmer. The workflow is structured and deliberate — Claude does not run free. Every architectural decision was driven through conversation, with proposals challenged and redirected where needed. Claude was used to pressure-test reasoning, draft structures, and capture decisions; the engineering judgement stayed with the developer throughout.
+
+### The `plans/` folder
+
+The `plans/` folder is an artifact of this workflow. Each planning session produces a timestamped subfolder (`plans/YYYYMMDDHHmmss/`) containing:
+
+| File          | Purpose                                                                                                            |
+| ------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `research.md` | Findings from the research phase — domain model, API design, architecture decisions, test strategy, seed data plan |
+| `plan.md`     | The implementation plan — a checkbox todo list of every task, with context and a verification section              |
+
+These files are generated before any code is written. They serve as a contract between the planning phase and the implementation phase, and as a record of the reasoning behind decisions.
+
+The workflow has four phases:
+
+1. **Research** — explore the codebase, the domain, and the requirements. All findings go into `research.md`.
+2. **Planning** — translate the research into a concrete, step-by-step implementation plan in `plan.md`. No code is written until the plan is agreed.
+3. **Implementation** — execute the plan task by task, checking off items as they are completed.
+4. **Cleanup** — optionally delete the `plans/` folder once the work is merged.
+
+The `thoughts.md` file at the project root is a separate artefact — it captures the design decisions and tradeoffs made during the assignment, intended to structure the accompanying presentation.
 
 ## Semantic Release
 
