@@ -1,19 +1,21 @@
-# template-ts-semantic-release
+# Qred Coding Assignment
 
-A personal TypeScript project template with the following already set up:
+A REST API built with Node.js and TypeScript, exposing company, employee, card, invoice, and transaction data for Qred's card product.
 
-- TypeScript
-- Nodemon
-- Semantic releases
-- Pre-commit hooks using Husky
-- GitHub Actions CI (type-check, lint, format, unit tests, integration tests)
-- Prettier
-- Dockerfile (multi-stage)
-- ESLint
-- Winston logger
+- TypeScript + Express REST API
+- Swagger/OpenAPI documentation (`/docs`)
+- In-memory caching with cache-aside pattern (node-cache)
+- Request validation middleware (Joi)
+- Typed error handling with structured error responses
 - Prisma ORM with MySQL
-- Unit tests
-- Integration tests (MySQL via Docker)
+- Nodemon with Docker for live reload development
+- Dockerfile (multi-stage)
+- Semantic releases
+- Pre-commit hooks (Husky)
+- GitHub Actions CI (type-check, lint, format, unit tests, integration tests)
+- Prettier + ESLint
+- Winston logger
+- Unit tests + Integration tests (MySQL via Docker)
 
 ## Getting started
 
@@ -109,7 +111,13 @@ This will spin up the Docker environment, wait for readiness, run the tests, and
 
 ## Manual testing with curl
 
-Once the app is running at `http://localhost:8080`, use the following commands to exercise every endpoint. Start with the list endpoint to get real IDs to use in the rest.
+Once the app is running at `http://localhost:8080`, use the following commands to exercise every endpoint.
+
+The seed data includes one company with a known ID — you can use it directly in steps 2–12 without running step 1 first:
+
+```
+8c46277f-155f-48f4-83aa-274d58a72f4a
+```
 
 ### 1. List all companies
 
