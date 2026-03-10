@@ -135,7 +135,6 @@ Returns all cards for all employees of the company. Each card includes its marke
 [
   {
     "id": "uuid",
-    "imageUrl": "https://...",
     "status": "INACTIVE",
     "market": "SWEDEN",
     "currency": "SEK",
@@ -267,7 +266,6 @@ Returns all cards issued to a specific employee.
 [
   {
     "id": "uuid",
-    "imageUrl": "https://...",
     "status": "ACTIVE",
     "market": "SWEDEN",
     "currency": "SEK",
@@ -317,7 +315,6 @@ model Card {
   id           String        @id @default(uuid())
   employeeId   String
   employee     Employee      @relation(fields: [employeeId], references: [id])
-  imageUrl     String?
   status       CardStatus    @default(INACTIVE)
   market       Market
   creditLimit  Int
