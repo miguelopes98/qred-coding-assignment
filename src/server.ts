@@ -1,7 +1,11 @@
 import express, { Application } from 'express';
+import path from 'path';
+import fs from 'fs';
+import yaml from 'js-yaml';
+import swaggerUi from 'swagger-ui-express';
 import { createLogger } from './utils/logger';
 import { v1Router } from './routes';
-import { timingMiddleware } from './middlewares';
+import { timingMiddleware, errorHandler } from './middlewares';
 
 const logger = createLogger(module);
 
@@ -18,11 +22,14 @@ export class Server {
 
     this.expressApp.get('/_ping', (req, res) => res.send({ ok: true }));
 
-    this.expressApp.get('/', (req, res) => {
-      res.send(`Hello World! Made a request to URL: ${req.url}`);
-    });
+    const swaggerDocument = yaml.load(
+      fs.readFileSync(path.join(__dirname, '..', 'swagger.yaml'), 'utf8')
+    ) as Record<string, unknown>;
+    this.expressApp.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
     this.expressApp.use('/v1', v1Router);
+
+    this.expressApp.use(errorHandler);
   }
 
   listen() {
