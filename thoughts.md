@@ -102,6 +102,30 @@ By placing market on Card:
 
 **Reasoning:** Without this, each route handler would need its own try/catch and its own logic for mapping errors to HTTP status codes — duplicated across every endpoint. Centralizing it means: one place to change error response shape, one place to handle Prisma-specific errors (e.g. `P2025` record not found → 404), and no risk of accidentally leaking stack traces to the client in production. Typed error classes make the intent explicit at the throw site and make the handler's mapping logic straightforward.
 
+## Cache invalidation must cover all affected keys
+
+**Decision:** `activateCard` invalidates both `cardsByEmployeeKey(employeeId)` and `cardsByCompanyKey(companyId)`.
+
+**Reasoning:** The initial implementation only invalidated the employee-scoped key. But `getCardsByCompany` has its own cache keyed by `companyId` — after activation, that cache would still hold the card with `status: INACTIVE` until TTL expiry. Any call to `GET /v1/companies/:companyId/cards` would return stale data.
+
+**Rule of thumb:** When a write mutates a resource, identify every cache key that could serve stale representations of that resource and invalidate all of them — not just the most obvious one.
+
+## DB queries should include the relations needed for the operation, not just the happy path
+
+**Decision:** `findCardById` includes `{ employee: true }` even though most callers only need the bare card fields.
+
+**Reasoning:** `activateCard` needs `employee.companyId` to invalidate the company-scoped cache. The naive fix was a second `findEmployeeById` call — but that is an extra round-trip whose sole purpose is supporting cache housekeeping, not business logic. Including the employee in the original fetch removes that entirely. The cost is a slightly heavier join on every `findCardById` call; the benefit is one fewer DB round-trip on `activateCard` and no coupling between the service layer and the employee DB module for a non-employee operation.
+
+**When to revisit:** If `findCardById` is called in a hot path where the employee data is never needed, a separate lean variant (e.g. `findCardByIdWithEmployee`) would let callers opt in to the join only when required.
+
+## Request validation middleware over inline validation
+
+**Decision:** All route handlers use `requestValidatorMiddleware({ params, query, body })` rather than calling `schema.validate(req.params)` inline inside the handler.
+
+**Reasoning:** Inline validation duplicates the same pattern (validate → check error → throw `ValidationError`) in every handler. The middleware extracts this into a single reusable function: it validates all three sources (params, query, body) in one pass, collects all Joi errors with `abortEarly: false`, and puts the validated values in `res.locals` (`validatedParams`, `validatedQuery`, `validatedBody`). Route handlers then destructure directly from `res.locals` without any validation boilerplate. Consistent with the pattern used in payments-api.
+
+**Tradeoff:** `res.locals` is not strongly typed — handlers use `as { ... }` casts. This is acceptable given the validation has already happened upstream; the cast reflects known post-validation shape, not blind trust.
+
 ## Committing .env.development
 
 **Decision:** `.env.development` is committed to the repository and not gitignored.
