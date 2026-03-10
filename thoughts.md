@@ -140,6 +140,39 @@ By placing market on Card:
 
 **Reasoning:** The original `activateCard` called `cache.del` twice — once for the employee key, once for the company key. This was easy to get wrong (as proven when the company key was initially missed entirely). Centralizing the invalidation logic in one function means there is a single place that knows the full set of keys a card mutation must bust. Adding a new card-scoped cache key in the future means updating one function, not hunting for every mutation site.
 
+## Caching is opt-in: operational endpoints are intentionally not cached
+
+**Decision:** Invoices and transactions services (`getInvoicesByCompany`, `getTransactionsByCompany`, `exportTransactionsByCompany`) do not use `withCache`. There is no bypass flag or mechanism to disable caching per call site.
+
+**Reasoning:** `withCache` is opt-in, not opt-out. The right model is: apply it where data is stable and reads are frequent; don't apply it where freshness is required. Invoices and transactions are billing-critical — serving stale data in a billing calculation or export is a correctness problem, not just a UX annoyance. Since these services are never called in a context where caching would be appropriate, the correct choice is to simply not wrap them.
+
+Adding a bypass flag (e.g. `withCache(..., { bypass: true })`) would only make sense if the same function needed to behave differently depending on call site. That's not the case here. The functions are distinct, and the decision is made once at definition time.
+
+**The split:**
+- Cached: companies, employees, cards — stable reference data, mutations explicitly invalidate the relevant keys.
+- Not cached: invoices, transactions — billing-critical, must always reflect current DB state.
+
+## Caching is a layer on top of good queries, not a substitute for them
+
+**Decision:** Query optimisation is always the baseline — before any caching is considered. Cache-aside is then applied on top for data where a short staleness window is acceptable. For billing-critical data that must always be fresh, the answer is not caching tricks — it's ensuring the underlying queries are fast enough to serve every request directly.
+
+**Why this matters:** A slow query behind a cache is still a slow query on every cache miss (cold start, TTL expiry, post-invalidation). If the query is the bottleneck, caching only papers over it. When caching is removed or unavailable, the performance cliff reappears.
+
+**What "well-optimised queries" means in practice:**
+- Proper indexes on every column used in filters, joins, and ordering
+- Avoiding N+1 — fetch relations in a single query using `include`/`select` rather than per-row round-trips
+- Pagination on anything unbounded — never fetch an entire table into memory
+- Selective `select` — only retrieve the columns the response actually needs
+- Connection pooling — avoid paying TCP handshake overhead on every request
+- Read replicas — distribute read load across multiple DB nodes without sacrificing freshness (replica lag is typically milliseconds)
+- Materialized views or pre-computed aggregates — for expensive aggregations that are read frequently, compute once and store, rather than recomputing on every request
+
+**Alternative caching patterns that still apply even when freshness is required:**
+- **Request-scoped memoization** — cache a result within a single request lifetime, not across requests. If the same DB call would be made three times during one operation, fetch once and reuse in memory for the duration of that request. Zero staleness risk because nothing persists between requests. This is the DataLoader pattern, widely used in GraphQL servers.
+- **Short-TTL caching (seconds, not minutes)** — for data where a 2–3 second staleness window is tolerable (e.g. rate limiting counters, approximate totals), a very short TTL can absorb traffic spikes without meaningful correctness risk.
+
+**Rule of thumb:** Decide on the acceptable staleness window before choosing a strategy. Zero staleness → request-scoped memoization + query optimisation. Minutes of staleness → cache-aside with explicit invalidation on mutations.
+
 ## Committing .env.development
 
 **Decision:** `.env.development` is committed to the repository and not gitignored.
