@@ -34,7 +34,6 @@ jobs:
       - name: Setup Node and install dependencies
         uses: ./.github/actions
         with:
-          npm_token: ${{ secrets.ADVISA_NPM_TOKEN }}
           node_version: ${{ env.NODE_VERSION }}
 
       - run: npm run test:integration:ci
@@ -52,7 +51,6 @@ jobs:
       - name: Setup Node and install dependencies
         uses: ./.github/actions
         with:
-          npm_token: ${{ secrets.ADVISA_NPM_TOKEN }}
           node_version: ${{ env.NODE_VERSION }}
 
       - run: npm run build:check
@@ -70,7 +68,6 @@ jobs:
       - name: Setup Node and install dependencies
         uses: ./.github/actions
         with:
-          npm_token: ${{ secrets.ADVISA_NPM_TOKEN }}
           node_version: ${{ env.NODE_VERSION }}
 
       - run: npm run format:check
@@ -88,7 +85,6 @@ jobs:
       - name: Setup Node and install dependencies
         uses: ./.github/actions
         with:
-          npm_token: ${{ secrets.ADVISA_NPM_TOKEN }}
           node_version: ${{ env.NODE_VERSION }}
 
       - run: npm run lint
@@ -106,7 +102,6 @@ jobs:
       - name: Setup Node and install dependencies
         uses: ./.github/actions
         with:
-          npm_token: ${{ secrets.ADVISA_NPM_TOKEN }}
           node_version: ${{ env.NODE_VERSION }}
 
       - run: npm test
