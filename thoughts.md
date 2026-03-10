@@ -126,6 +126,20 @@ By placing market on Card:
 
 **Tradeoff:** `res.locals` is not strongly typed — handlers use `as { ... }` casts. This is acceptable given the validation has already happened upstream; the cast reflects known post-validation shape, not blind trust.
 
+## Cache-aside pattern encapsulated in withCache
+
+**Decision:** Cache read logic is encapsulated in a `withCache(keyFn, fn)` higher-order function rather than repeated inline in every service function.
+
+**Reasoning:** Every cached service function had the same three-step pattern: check cache → return if hit → fetch, store, return if miss. Duplicating this across six functions meant six places where the pattern could drift, be written incorrectly, or have the cache set forgotten entirely. `withCache` reduces each cached function to its essential logic — the key derivation and the actual fetch — without any boilerplate.
+
+**Why caching stays at the service layer, not the DB layer:** The cache stores transformed response shapes (`CardResponse`, `CompanyResponse`, etc.), not raw Prisma objects. Moving caching to the DB layer would either require computing response shapes there (wrong separation of concerns) or caching raw objects and re-transforming on every cache hit. The service layer is the right boundary.
+
+## Entity-scoped cache invalidators
+
+**Decision:** Cache invalidation on mutations is done through named invalidator functions (e.g. `invalidateCardCaches(employeeId, companyId)`) rather than calling `cache.del(key)` directly at the mutation site.
+
+**Reasoning:** The original `activateCard` called `cache.del` twice — once for the employee key, once for the company key. This was easy to get wrong (as proven when the company key was initially missed entirely). Centralizing the invalidation logic in one function means there is a single place that knows the full set of keys a card mutation must bust. Adding a new card-scoped cache key in the future means updating one function, not hunting for every mutation site.
+
 ## Committing .env.development
 
 **Decision:** `.env.development` is committed to the repository and not gitignored.
