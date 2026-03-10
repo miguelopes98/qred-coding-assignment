@@ -1,26 +1,28 @@
-# template-ts-semantic-release
+# Qred Coding Assignment
 
-A personal TypeScript project template with the following already set up:
+A REST API built with Node.js and TypeScript, exposing company, employee, card, invoice, and transaction data for Qred's card product.
 
-- TypeScript
-- Nodemon
-- Semantic releases
-- Pre-commit hooks using Husky
-- GitHub Actions CI (type-check, lint, format, unit tests, integration tests)
-- Prettier
-- Dockerfile (multi-stage)
-- ESLint
-- Winston logger
+- TypeScript + Express REST API
+- Swagger/OpenAPI documentation (`/docs`)
+- In-memory caching with cache-aside pattern (node-cache)
+- Request validation middleware (Joi)
+- Typed error handling with structured error responses
 - Prisma ORM with MySQL
-- Unit tests
-- Integration tests (MySQL via Docker)
+- Nodemon with Docker for live reload development
+- Dockerfile (multi-stage)
+- Semantic releases
+- Pre-commit hooks (Husky)
+- GitHub Actions CI (type-check, lint, format, unit tests, integration tests)
+- Prettier + ESLint
+- Winston logger
+- Unit tests + Integration tests (MySQL via Docker)
 
 ## Getting started
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) >= 22
-- [Docker](https://www.docker.com/) (for running the app and integration tests)
+- [Docker](https://www.docker.com/) — required to run the app and integration tests
+- [Node.js](https://nodejs.org/) >= 22 — only needed if you want to run tooling locally (tests, lint, type-check, Prisma CLI). Not required to run the app itself.
 
 ### Option A: Docker with live reload (recommended for development)
 
@@ -33,7 +35,7 @@ npm install                    # install dependencies and set up git hooks
 npm run start:dev:docker:build # build the dev image and start the app + db
 ```
 
-The app will be available at `http://localhost:8080`.
+The app will be available at `http://localhost:8080`. Swagger docs at `http://localhost:8080/docs`.
 
 On subsequent runs:
 
@@ -107,6 +109,102 @@ npm run test:integration:local
 
 This will spin up the Docker environment, wait for readiness, run the tests, and tear everything down.
 
+## Manual testing with curl
+
+Once the app is running at `http://localhost:8080`, use the following commands to exercise every endpoint.
+
+The seed data includes one company with a known ID — you can use it directly in steps 2–12 without running step 1 first:
+
+```
+8c46277f-155f-48f4-83aa-274d58a72f4a
+```
+
+### 1. List all companies
+
+```bash
+curl http://localhost:8080/v1/companies
+```
+
+### 2. Get a single company
+
+```bash
+curl http://localhost:8080/v1/companies/<companyId>
+```
+
+### 3. Get employees for a company
+
+```bash
+curl http://localhost:8080/v1/companies/<companyId>/employees
+```
+
+### 4. Get a single employee
+
+```bash
+curl http://localhost:8080/v1/employees/<employeeId>
+```
+
+### 5. Get cards for a company
+
+```bash
+curl http://localhost:8080/v1/companies/<companyId>/cards
+```
+
+### 6. Get cards for an employee
+
+```bash
+curl http://localhost:8080/v1/employees/<employeeId>/cards
+```
+
+### 7. Activate a card
+
+Anna's card is seeded as `INACTIVE` — use its ID from step 5.
+
+```bash
+curl -X POST http://localhost:8080/v1/cards/<cardId>/activate
+```
+
+### 8. Try to activate the same card again — expect 409
+
+```bash
+curl -X POST http://localhost:8080/v1/cards/<cardId>/activate
+```
+
+### 9. Get all invoices for a company
+
+```bash
+curl http://localhost:8080/v1/companies/<companyId>/invoices
+```
+
+### 10. Get invoices filtered by status
+
+```bash
+curl "http://localhost:8080/v1/companies/<companyId>/invoices?status=DUE"
+```
+
+### 11. Get paginated transactions
+
+```bash
+curl "http://localhost:8080/v1/companies/<companyId>/transactions?page=1&pageSize=10"
+```
+
+### 12. Export transactions as CSV
+
+```bash
+curl http://localhost:8080/v1/companies/<companyId>/transactions/export
+```
+
+### 13. Trigger a validation error (invalid UUID)
+
+```bash
+curl http://localhost:8080/v1/companies/not-a-uuid
+```
+
+### 14. Trigger a not found error
+
+```bash
+curl http://localhost:8080/v1/employees/00000000-0000-0000-0000-000000000000
+```
+
 ## GitHub Actions
 
 The CI pipeline runs on every push to `master` and on pull requests. It includes:
@@ -122,6 +220,30 @@ The CI pipeline runs on every push to `master` and on pull requests. It includes
 | Secret             | Purpose                                                |
 | ------------------ | ------------------------------------------------------ |
 | `GH_RELEASE_TOKEN` | GitHub PAT used by semantic-release to create releases |
+
+## AI-assisted development workflow
+
+This project was developed using [Claude Code](https://claude.ai/claude-code) (Anthropic) as an AI pair programmer. The workflow is structured and deliberate — Claude does not run free. Every architectural decision was driven through conversation, with proposals challenged and redirected where needed. Claude was used to pressure-test reasoning, draft structures, and capture decisions; the engineering judgement stayed with the developer throughout.
+
+### The `plans/` folder
+
+The `plans/` folder is an artifact of this workflow. Each planning session produces a timestamped subfolder (`plans/YYYYMMDDHHmmss/`) containing:
+
+| File          | Purpose                                                                                                            |
+| ------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `research.md` | Findings from the research phase — domain model, API design, architecture decisions, test strategy, seed data plan |
+| `plan.md`     | The implementation plan — a checkbox todo list of every task, with context and a verification section              |
+
+These files are generated before any code is written. They serve as a contract between the planning phase and the implementation phase, and as a record of the reasoning behind decisions.
+
+The workflow has four phases:
+
+1. **Research** — explore the codebase, the domain, and the requirements. All findings go into `research.md`.
+2. **Planning** — translate the research into a concrete, step-by-step implementation plan in `plan.md`. No code is written until the plan is agreed.
+3. **Implementation** — execute the plan task by task, checking off items as they are completed.
+4. **Cleanup** — optionally delete the `plans/` folder once the work is merged.
+
+The `thoughts.md` file at the project root is a separate artefact — it captures the design decisions and tradeoffs made during the assignment, intended to structure the accompanying presentation.
 
 ## Semantic Release
 

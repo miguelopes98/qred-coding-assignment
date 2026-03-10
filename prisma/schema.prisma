@@ -7,10 +7,82 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Example model — replace with your actual schema
-model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
+model Company {
+  id        String     @id @default(uuid())
+  name      String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  employees Employee[]
+  invoices  Invoice[]
+}
+
+model Employee {
+  id        String   @id @default(uuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+  name      String
+  email     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  cards     Card[]
+}
+
+model Card {
+  id           String        @id @default(uuid())
+  employeeId   String
+  employee     Employee      @relation(fields: [employeeId], references: [id])
+  status       CardStatus    @default(INACTIVE)
+  market       Market
+  creditLimit  Int
+  amountSpent  Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  invoices     Invoice[]
+  transactions Transaction[]
+}
+
+model Invoice {
+  id        String        @id @default(uuid())
+  companyId String
+  company   Company       @relation(fields: [companyId], references: [id])
+  amount    Int
+  dueDate   DateTime
+  status    InvoiceStatus @default(DUE)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  cards     Card[]
+}
+
+model Transaction {
+  id          String   @id @default(uuid())
+  cardId      String
+  card        Card     @relation(fields: [cardId], references: [id])
+  description String
+  amount      Int
+  date        DateTime
+  category    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum CardStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
+enum InvoiceStatus {
+  PAID
+  DUE
+}
+
+enum Market {
+  SWEDEN
+  FINLAND
+  DENMARK
+  NORWAY
+  NETHERLANDS
+  BELGIUM
+  GERMANY
+  BRAZIL
 }

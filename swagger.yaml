@@ -1,0 +1,467 @@
+openapi: 3.0.3
+info:
+  title: Qred Card API
+  description: RESTful API powering the Qred corporate card account dashboard.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/v1
+    description: Local development server
+paths:
+  /companies:
+    get:
+      summary: List all companies
+      operationId: listCompanies
+      tags:
+        - Companies
+      responses:
+        '200':
+          description: A list of companies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Company'
+
+  /companies/{companyId}:
+    get:
+      summary: Get a company by ID
+      operationId: getCompany
+      tags:
+        - Companies
+      parameters:
+        - $ref: '#/components/parameters/companyId'
+      responses:
+        '200':
+          description: The company
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /companies/{companyId}/cards:
+    get:
+      summary: List all cards for a company
+      operationId: getCardsByCompany
+      tags:
+        - Companies
+      parameters:
+        - $ref: '#/components/parameters/companyId'
+      responses:
+        '200':
+          description: A list of cards belonging to the company's employees
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Card'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /companies/{companyId}/invoices:
+    get:
+      summary: List invoices for a company
+      operationId: getInvoicesByCompany
+      tags:
+        - Companies
+      parameters:
+        - $ref: '#/components/parameters/companyId'
+        - name: status
+          in: query
+          description: Filter by invoice status. When set to DUE, returns the most recent DUE invoice per market.
+          schema:
+            $ref: '#/components/schemas/InvoiceStatus'
+      responses:
+        '200':
+          description: A list of invoices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Invoice'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /companies/{companyId}/transactions:
+    get:
+      summary: List transactions for a company (paginated)
+      operationId: getTransactionsByCompany
+      tags:
+        - Companies
+      parameters:
+        - $ref: '#/components/parameters/companyId'
+        - name: page
+          in: query
+          description: Page number (1-based)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          description: Number of items per page (max 100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        '200':
+          description: A paginated list of transactions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTransactions'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /companies/{companyId}/transactions/export:
+    get:
+      summary: Export all transactions for a company as CSV
+      operationId: exportTransactionsByCompany
+      tags:
+        - Companies
+      parameters:
+        - $ref: '#/components/parameters/companyId'
+      responses:
+        '200':
+          description: A CSV file of all transactions
+          content:
+            text/csv:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /companies/{companyId}/employees:
+    get:
+      summary: List employees for a company
+      operationId: getEmployeesByCompany
+      tags:
+        - Companies
+      parameters:
+        - $ref: '#/components/parameters/companyId'
+      responses:
+        '200':
+          description: A list of employees
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EmployeeSummary'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /employees/{employeeId}:
+    get:
+      summary: Get an employee by ID
+      operationId: getEmployee
+      tags:
+        - Employees
+      parameters:
+        - $ref: '#/components/parameters/employeeId'
+      responses:
+        '200':
+          description: The employee
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /employees/{employeeId}/cards:
+    get:
+      summary: List cards for an employee
+      operationId: getCardsByEmployee
+      tags:
+        - Employees
+      parameters:
+        - $ref: '#/components/parameters/employeeId'
+      responses:
+        '200':
+          description: A list of cards issued to the employee
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Card'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /cards/{cardId}/activate:
+    post:
+      summary: Activate a card
+      operationId: activateCard
+      tags:
+        - Cards
+      parameters:
+        - $ref: '#/components/parameters/cardId'
+      responses:
+        '200':
+          description: The activated card
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+components:
+  parameters:
+    companyId:
+      name: companyId
+      in: path
+      required: true
+      description: UUID of the company
+      schema:
+        type: string
+        format: uuid
+    employeeId:
+      name: employeeId
+      in: path
+      required: true
+      description: UUID of the employee
+      schema:
+        type: string
+        format: uuid
+    cardId:
+      name: cardId
+      in: path
+      required: true
+      description: UUID of the card
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    Company:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+      required:
+        - id
+        - name
+
+    EmployeeSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+      required:
+        - id
+        - name
+        - email
+
+    Employee:
+      allOf:
+        - $ref: '#/components/schemas/EmployeeSummary'
+        - type: object
+          properties:
+            companyId:
+              type: string
+              format: uuid
+          required:
+            - companyId
+
+    CardStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - INACTIVE
+        - PENDING
+
+    InvoiceStatus:
+      type: string
+      enum:
+        - DUE
+        - PAID
+
+    Market:
+      type: string
+      enum:
+        - SWEDEN
+        - FINLAND
+        - DENMARK
+        - NORWAY
+        - NETHERLANDS
+        - BELGIUM
+        - GERMANY
+        - BRAZIL
+
+    Card:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/CardStatus'
+        market:
+          $ref: '#/components/schemas/Market'
+        currency:
+          type: string
+          example: SEK
+        creditLimit:
+          type: integer
+          description: In smallest currency unit (e.g. öre for SEK)
+        amountSpent:
+          type: integer
+          description: In smallest currency unit
+        remainingSpend:
+          type: integer
+          description: creditLimit - amountSpent
+        employee:
+          $ref: '#/components/schemas/EmployeeSummary'
+      required:
+        - id
+        - status
+        - market
+        - currency
+        - creditLimit
+        - amountSpent
+        - remainingSpend
+
+    Invoice:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        amount:
+          type: integer
+          description: In smallest currency unit
+        dueDate:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/InvoiceStatus'
+        market:
+          $ref: '#/components/schemas/Market'
+        currency:
+          type: string
+          example: SEK
+      required:
+        - id
+        - amount
+        - dueDate
+        - status
+        - market
+        - currency
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        description:
+          type: string
+        amount:
+          type: integer
+          description: In smallest currency unit
+        date:
+          type: string
+          format: date
+        category:
+          type: string
+        currency:
+          type: string
+          example: SEK
+      required:
+        - id
+        - description
+        - amount
+        - date
+        - category
+        - currency
+
+    PaginatedTransactions:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+        totalCount:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+      required:
+        - items
+        - totalCount
+        - page
+        - pageSize
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+          required:
+            - code
+            - message
+      required:
+        - error
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Conflict:
+      description: Conflict — card is already active or pending
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
