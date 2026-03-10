@@ -33,7 +33,7 @@ npm install                    # install dependencies and set up git hooks
 npm run start:dev:docker:build # build the dev image and start the app + db
 ```
 
-The app will be available at `http://localhost:8080`.
+The app will be available at `http://localhost:8080`. Swagger docs at `http://localhost:8080/docs`.
 
 On subsequent runs:
 
