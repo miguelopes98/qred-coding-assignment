@@ -25,5 +25,6 @@ RUN npm pkg delete scripts.prepare
 RUN npm ci --omit=dev
 RUN npx prisma generate
 COPY --from=builder /data/build /data/build/
+COPY swagger.yaml /data/build/swagger.yaml
 
 CMD ["sh", "-c", "npx prisma migrate deploy && node build/src/index.js"]
