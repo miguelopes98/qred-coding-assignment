@@ -1,6 +1,6 @@
 {
   "name": "template-ts-semantic-release",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A personal TypeScript project template with semantic releases, pre-commit hooks, GitHub Actions CI, Prettier, Docker, linting, unit tests and integration tests.",
   "main": "build/index.js",
   "engines": {
