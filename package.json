@@ -11,9 +11,8 @@
   "scripts": {
     "start": "docker compose up",
     "start:build": "docker compose up --build",
-    "start:dev": "dotenv -e .env.development -- nodemon --files src/index.ts",
-    "start:dev:docker": "docker compose -f docker-compose.dev.yml up",
-    "start:dev:docker:build": "docker compose -f docker-compose.dev.yml up --build",
+    "start:dev": "docker compose -f docker-compose.dev.yml up -d",
+    "start:dev:build": "docker compose -f docker-compose.dev.yml up --build",
     "start:prod": "node ./build/src/index.js",
     "build": "rimraf ./build && tsc  --build --verbose ",
     "build:check": "tsc --noEmit",

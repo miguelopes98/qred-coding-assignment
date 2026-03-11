@@ -13,6 +13,7 @@ services:
     volumes:
       - ./src:/data/src
       - ./config:/data/config
+      - ./swagger.yaml:/data/swagger.yaml
 
   db:
     image: mysql:8
