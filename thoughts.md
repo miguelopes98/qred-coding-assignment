@@ -188,6 +188,27 @@ Adding a bypass flag (e.g. `withCache(..., { bypass: true })`) would only make s
 
 **Rule of thumb:** Decide on the acceptable staleness window before choosing a strategy. Zero staleness → request-scoped memoization + query optimisation. Minutes of staleness → cache-aside with explicit invalidation on mutations.
 
+## Two Docker setups: dev vs production
+
+**Decision:** Two separate Dockerfile/docker-compose pairs — `Dockerfile` + `docker-compose.yml` for production, `Dockerfile.dev` + `docker-compose.dev.yml` for local development.
+
+**Reasoning:** The two environments have fundamentally different requirements:
+
+- **Production** uses a multi-stage build: a full Node.js image compiles the TypeScript, then the compiled output is copied into a lean Alpine image with only production dependencies. The result is a small, hardened image with no dev tooling, no source files, no build cache.
+- **Dev** uses volume mounts (`./src`, `./config`, `./swagger.yaml`) so that changes to source files are reflected inside the running container in real time, without rebuilding the image. `nodemon` watches for file changes and restarts the process. This gives the same live-reload experience as running locally, but inside Docker where the MySQL container is also running.
+
+**Consequence:** The `swagger.yaml` path resolves differently in each environment. In dev, `ts-node` runs from `src/`, so `__dirname` is `/data/src` and the file is expected at `/data/swagger.yaml` (mounted directly). In production, compiled code runs from `/data/build/src`, so the file must be at `/data/build/swagger.yaml` — copied explicitly in the Dockerfile.
+
+## MySQL healthcheck: `mysql SELECT 1` over `mysqladmin ping`
+
+**Decision:** The Docker Compose healthcheck for the MySQL container uses `mysql -u dev -pdev dev -e 'SELECT 1'`, not `mysqladmin ping`.
+
+**Reasoning:** `mysqladmin ping` only checks whether the MySQL process is alive and responsive — it passes as soon as the daemon is up, which can happen before MySQL has finished initializing the data directory, creating the `dev` database, and setting up the `dev` user. The app container's `depends_on: condition: service_healthy` relies on the healthcheck to be truly ready, so a false positive here causes `prisma migrate deploy` to fail with `P1001: Can't reach database server`.
+
+`mysql -e 'SELECT 1'` against the `dev` database proves the full chain: process is alive, user authentication works, and the database exists and is accessible. This is the correct signal for the app to start.
+
+**Rule of thumb:** A healthcheck should verify the exact precondition that the depending service needs — not the nearest proxy for it.
+
 ## Committing .env.development
 
 **Decision:** `.env.development` is committed to the repository and not gitignored.
