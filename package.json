@@ -10,7 +10,7 @@
   "type": "commonjs",
   "scripts": {
     "start": "docker compose up -d",
-    "start:build": "docker compose up --build",
+    "start:build": "docker compose up --build -d",
     "start:dev": "docker compose -f docker-compose.dev.yml up -d",
     "start:dev:build": "docker compose -f docker-compose.dev.yml up --build -d",
     "start:prod": "node ./build/src/index.js",
