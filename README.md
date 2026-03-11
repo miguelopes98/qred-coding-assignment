@@ -17,6 +17,30 @@ A REST API built with Node.js and TypeScript, exposing company, employee, card, 
 - Winston logger
 - Unit tests + Integration tests (MySQL via Docker)
 
+## AI-assisted development workflow
+
+This project was developed using [Claude Code](https://claude.ai/claude-code) (Anthropic) as an AI pair programmer. The workflow is structured and deliberate — Claude does not run free. Every architectural decision was driven through conversation, with proposals challenged and redirected where needed. Claude was used to pressure-test reasoning, draft structures, and capture decisions; the engineering judgement stayed with the developer throughout.
+
+### The `plans/` folder
+
+The `plans/` folder is an artifact of this workflow. Each planning session produces a timestamped subfolder (`plans/YYYYMMDDHHmmss/`) containing:
+
+| File          | Purpose                                                                                                            |
+| ------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `research.md` | Findings from the research phase — domain model, API design, architecture decisions, test strategy, seed data plan |
+| `plan.md`     | The implementation plan — a checkbox todo list of every task, with context and a verification section              |
+
+These files are generated before any code is written. They serve as a contract between the planning phase and the implementation phase, and as a record of the reasoning behind decisions.
+
+The workflow has four phases:
+
+1. **Research** — explore the codebase, the domain, and the requirements. All findings go into `research.md`.
+2. **Planning** — translate the research into a concrete, step-by-step implementation plan in `plan.md`. No code is written until the plan is agreed.
+3. **Implementation** — execute the plan task by task, checking off items as they are completed.
+4. **Cleanup** — optionally delete the `plans/` folder once the work is merged.
+
+The [`thoughts.md`](thoughts.md) file at the project root is a separate artefact — it captures the design decisions and tradeoffs made during the assignment. For anyone reviewing the implementation, this is the best starting point for understanding the reasoning behind the data model, API design, caching strategy, and payload design choices.
+
 ## Getting started
 
 ### Prerequisites
@@ -220,30 +244,6 @@ The CI pipeline runs on every push to `master` and on pull requests. It includes
 | Secret             | Purpose                                                |
 | ------------------ | ------------------------------------------------------ |
 | `GH_RELEASE_TOKEN` | GitHub PAT used by semantic-release to create releases |
-
-## AI-assisted development workflow
-
-This project was developed using [Claude Code](https://claude.ai/claude-code) (Anthropic) as an AI pair programmer. The workflow is structured and deliberate — Claude does not run free. Every architectural decision was driven through conversation, with proposals challenged and redirected where needed. Claude was used to pressure-test reasoning, draft structures, and capture decisions; the engineering judgement stayed with the developer throughout.
-
-### The `plans/` folder
-
-The `plans/` folder is an artifact of this workflow. Each planning session produces a timestamped subfolder (`plans/YYYYMMDDHHmmss/`) containing:
-
-| File          | Purpose                                                                                                            |
-| ------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `research.md` | Findings from the research phase — domain model, API design, architecture decisions, test strategy, seed data plan |
-| `plan.md`     | The implementation plan — a checkbox todo list of every task, with context and a verification section              |
-
-These files are generated before any code is written. They serve as a contract between the planning phase and the implementation phase, and as a record of the reasoning behind decisions.
-
-The workflow has four phases:
-
-1. **Research** — explore the codebase, the domain, and the requirements. All findings go into `research.md`.
-2. **Planning** — translate the research into a concrete, step-by-step implementation plan in `plan.md`. No code is written until the plan is agreed.
-3. **Implementation** — execute the plan task by task, checking off items as they are completed.
-4. **Cleanup** — optionally delete the `plans/` folder once the work is merged.
-
-The `thoughts.md` file at the project root is a separate artefact — it captures the design decisions and tradeoffs made during the assignment, intended to structure the accompanying presentation.
 
 ## Semantic Release
 

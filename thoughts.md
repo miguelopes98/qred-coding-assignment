@@ -209,6 +209,24 @@ Adding a bypass flag (e.g. `withCache(..., { bypass: true })`) would only make s
 
 **Rule of thumb:** A healthcheck should verify the exact precondition that the depending service needs — not the nearest proxy for it.
 
+## Payload design: serving frontend-ready data
+
+**Decision:** API responses expose computed, display-ready fields rather than raw database values.
+
+**Reasoning:** The service layer is the right place to perform the transformation from stored representation to presentation representation. Pushing this responsibility to the frontend duplicates logic, introduces the risk of inconsistency across clients, and couples the UI to internal data model details it shouldn't need to know about.
+
+Specific decisions made for frontend ergonomics:
+
+- **`remainingSpend` is computed server-side.** The card response includes `remainingSpend` (`creditLimit - amountSpent`) directly. The frontend does not need to perform this subtraction — it receives a value it can render immediately. This also means the computation lives in one place: if the definition of "remaining spend" ever changes (e.g. pending transactions are factored in), only the service layer changes.
+
+- **`currency` is derived from `market`, not stored.** The card response includes a `currency` string (e.g. `"SEK"`, `"EUR"`) derived from the card's `market` enum at the service layer. The frontend never has to know that `SWEDEN → SEK` — it receives the display value directly.
+
+- **Invoice endpoint returns exactly what the dashboard badge needs.** `GET /v1/companies/:companyId/invoices?status=DUE` returns only outstanding invoices. The `status=DUE` filter exists because the dashboard only ever needs to show the "Invoice due" badge — it does not need the full billing history. The endpoint is shaped around the UI need, not around the billing domain in the abstract.
+
+- **Transaction response includes `totalCount`.** The paginated transaction response returns the total number of matching records alongside the current page. This is what drives the "54 more items in transaction view" CTA — the frontend knows the total without fetching all records.
+
+**Rule of thumb:** If a field can be computed once on the server and returned to many clients, compute it on the server. Only push raw data to the client when the transformation is genuinely client-specific.
+
 ## Committing .env.development
 
 **Decision:** `.env.development` is committed to the repository and not gitignored.
