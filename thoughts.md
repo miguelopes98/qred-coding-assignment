@@ -227,6 +227,20 @@ Specific decisions made for frontend ergonomics:
 
 **Rule of thumb:** If a field can be computed once on the server and returned to many clients, compute it on the server. Only push raw data to the client when the transformation is genuinely client-specific.
 
+## What I'd explore further with more time
+
+**Redis instead of node-cache** — the most impactful infrastructure change. In-memory caching is process-scoped: in a horizontally scaled deployment, each instance maintains its own cache, which causes inconsistent responses across instances and wastes memory. Redis is a shared external cache — all instances read from and write to the same store. Switching would also open the door to a more principled cache management layer: centralised TTL configuration, cache-aside as a reusable abstraction across services, and easier observability (cache hit rates, key inspection). The current implementation makes the switch straightforward — only the cache client and key management modules would need to change.
+
+**Authentication layer** — the API currently has no auth. In production, every endpoint would be scoped to the authenticated user: `GET /v1/companies` would only return companies the requester belongs to, not all companies in the database. This changes the data access pattern significantly — queries become user-scoped rather than returning global results. A JWT middleware validating a bearer token, with the decoded user identity used to filter queries, would be the natural starting point.
+
+**Card management endpoints** — the current scope is intentionally read-heavy with one state transition (activate). A production card product needs the full lifecycle: card creation (issuance), deactivation, replacement (new card number on same account), and possibly suspension. These follow the same patterns already established — the architecture handles them cleanly — but each carries business rules worth designing carefully (e.g. can you activate a card that is PENDING? what triggers a replacement vs a deactivation?).
+
+**Graduating `Market` from an enum to an entity** — currently `Market` is an enum and `currency` is derived from it in the service layer. This works while market configuration is simple. As the product scales — different credit limit rules per market, different card networks (Visa vs Mastercard by country), regulatory constraints — the enum becomes a bottleneck. Graduating to a `Market` table with its own configuration columns is the natural evolution. The schema change is straightforward; the migration path from enum to foreign key is the main complexity to plan for.
+
+**Employee management** — the current API only reads employees; it has no endpoints to create, update, or offboard them. In production, a company admin would need to invite employees (triggering an onboarding flow), update their details, and offboard them when they leave — which itself has implications for their cards (suspend? transfer to another employee? cancel?). These operations are straightforward to add following the existing patterns, but the offboarding flow in particular carries business rules that are worth designing carefully before building.
+
+**Employee hierarchy** — the current model is flat: every employee belongs to a company with no structure between them. In practice, corporate card products often need a manager/report relationship — a manager who can view or approve card requests for their team, or spending approval workflows before a transaction is authorised. This would require a self-referential relationship on `Employee` (e.g. `managerId`) and a role or permission model that scopes what each employee can see and do. It also intersects with the auth layer — once users are authenticated, their role in the hierarchy determines their data access.
+
 ## Committing .env.development
 
 **Decision:** `.env.development` is committed to the repository and not gitignored.
