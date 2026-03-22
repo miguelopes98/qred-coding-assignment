@@ -248,3 +248,7 @@ The CI pipeline runs on every push to `master` and on pull requests. It includes
 ## Semantic Release
 
 Releases are triggered automatically on push to `master` via the `release.yml` workflow. Versioning follows [Conventional Commits](https://www.conventionalcommits.org/).
+
+Appendix:
+<img width="342" height="862" alt="Screenshot 2026-03-22 at 18 10 07" src="https://github.com/user-attachments/assets/d95160a8-708e-420c-b999-36648e811428" />
+
